@@ -2,7 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
 <title>VS· Very Short</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -20,14 +24,32 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;}
-body{background:#111;display:flex;align-items:center;justify-content:center;font-family:var(--FB);color:var(--w);}
+html{height:-webkit-fill-available;}
+body{background:#111;display:flex;align-items:center;justify-content:center;font-family:var(--FB);color:var(--w);min-height:100vh;min-height:-webkit-fill-available;}
 
 /* ─── SHELL ─── */
 #app{
-  width:min(390px,100vw);height:min(844px,100vh);
+  width:min(390px,100vw);height:min(844px,100vh);height:min(844px,100dvh);
   background:var(--k);border-radius:44px;overflow:hidden;
   position:relative;display:flex;flex-direction:column;
   box-shadow:0 0 0 1px rgba(255,255,255,.08),0 40px 120px rgba(0,0,0,.95);
+}
+
+/* ─── MOBILE FULL-SCREEN ─── */
+@media(max-width:430px){
+  html,body{height:100%;height:-webkit-fill-available;}
+  body{align-items:flex-start;justify-content:flex-start;}
+  #app{
+    width:100vw;
+    height:100vh;height:100svh;
+    border-radius:0;box-shadow:none;
+    padding-top:env(safe-area-inset-top,0px);
+  }
+  .viewer{border-radius:0;}
+  .tabbar{
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    height:calc(var(--tabh) + env(safe-area-inset-bottom,0px));
+  }
 }
 
 /* ─── SCREENS ─── */
@@ -502,7 +524,11 @@ function StoryViewer({story, onClose}){
 
       {/* User */}
       <div className="viewer-user">
-        <div className="viewer-av">{story?.emoji||'🎬'}</div>
+        <div className="viewer-av">
+          {story?.avatar_url
+            ? <img src={story.avatar_url} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} alt=""/>
+            : story?.emoji||'🎬'}
+        </div>
         <div>
           <p className="viewer-name">{story?.username}</p>
           <p className="viewer-ago">{story?timeAgo(story.created_at):''}</p>
@@ -563,7 +589,11 @@ function FeedScreen({onRecord}){
           {top.map((s,i)=>(
             <div key={s.id} className="orb-item" onClick={()=>openStory(s)}>
               <div className={`orb-ring ${viewed.has(s.id)?'seen':'fresh'} ${i===0?'sz-xl':i<3?'sz-lg':'sz-md'}`}>
-                <div className="orb-face">{s.emoji}</div>
+                <div className="orb-face">
+                  {s.avatar_url
+                    ? <img src={s.avatar_url} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} alt=""/>
+                    : s.emoji}
+                </div>
               </div>
               <span className={`orb-lbl ${viewed.has(s.id)?'':'new'}`}>{s.display}</span>
             </div>
@@ -586,7 +616,9 @@ function FeedScreen({onRecord}){
               <div key={s.id} className="morb" onClick={()=>!viewed.has(s.id)&&openStory(s)}>
                 <div className={`mring ${sizes[si]} ${viewed.has(s.id)?'seen':s.is_live?'fresh hot':'fresh'}`}>
                   <div className="mface">
-                    {s.emoji}
+                    {s.avatar_url
+                      ? <img src={s.avatar_url} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',position:'absolute',inset:0}} alt=""/>
+                      : s.emoji}
                     {s.story_count>1 && <div className="mbadge">×{s.story_count}</div>}
                   </div>
                 </div>
@@ -1256,16 +1288,22 @@ function App(){
   const loadStories = async () => {
     try {
       const {data,error} = await sb.from('stories')
-        .select('*, profiles:user_id(username,display_name,avatar_emoji)')
+        .select('*, profiles:user_id(username,display_name,avatar_emoji,avatar_url)')
         .eq('is_active',true)
         .gte('created_at',new Date(Date.now()-86400000).toISOString())
         .order('created_at',{ascending:false}).limit(30);
       if(!error && data?.length>0){
-        setStories(data.map(s=>({
+        const real = data.map(s=>({
           ...s, emoji:s.emoji||s.profiles?.avatar_emoji||'🎬',
           username:(s.profiles?.username||'user').toUpperCase(),
-          display:s.profiles?.username||'user', story_count:1
-        })));
+          display:s.profiles?.username||'user',
+          avatar_url:s.profiles?.avatar_url||null,
+          story_count:1
+        }));
+        // Backfill with demo stories so the feed always looks full
+        const realIds = new Set(real.map(r=>r.id));
+        const filler = DEMO.filter(d=>!realIds.has(d.id));
+        setStories([...real, ...filler]);
         setSbReact(true);
       }
     } catch(e){ console.log('usando demo data'); }
