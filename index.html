@@ -441,10 +441,11 @@ function Toasts({list}){
    STORY VIEWER
 ══════════════════════════════ */
 function StoryViewer({story, onClose}){
-  const {sbReact, user} = useApp();
+  const {sbReact, user, toast} = useApp();
   const barRef = useRef(null);
   const timerRef = useRef(null);
   const [reacted, setReacted] = useState({});
+  const [replyText, setReplyText] = useState('');
   const dur = (story?.duration_ms || 7000);
 
   // Determine video src
@@ -465,9 +466,19 @@ function StoryViewer({story, onClose}){
 
   const handleReact = async (emoji) => {
     setReacted(r=>({...r,[emoji]:!r[emoji]}));
-    if(sbReact && user && story) {
+    if(sbReact && user?.id && user.id!=='demo' && story?.id) {
       await sb.from('reactions').upsert({story_id:story.id, user_id:user.id, emoji}).catch(()=>{});
     }
+  };
+
+  const sendReply = async () => {
+    const txt = replyText.trim();
+    if(!txt) return;
+    setReplyText('');
+    if(sbReact && user?.id && user.id!=='demo' && story?.id){
+      await sb.from('replies').insert({story_id:story.id, user_id:user.id, text:txt}).catch(()=>{});
+    }
+    toast('Respuesta enviada ✓','ok');
   };
 
   return (
@@ -503,12 +514,15 @@ function StoryViewer({story, onClose}){
       <div className="viewer-bottom">
         <p className="viewer-caption">{story?.caption}</p>
         <div className="viewer-reply-row">
-          <input className="viewer-input" placeholder="Responde a esta historia..."/>
-          <div className="viewer-reply-row" style={{gap:6}}>
-            {['❤️','🔥'].map(e=>(
-              <div key={e} className={`react-btn ${reacted[e]?'on':''}`} onClick={()=>handleReact(e)}>{e}</div>
-            ))}
-          </div>
+          <input className="viewer-input"
+            value={replyText}
+            onChange={e=>setReplyText(e.target.value)}
+            onKeyDown={e=>e.key==='Enter'&&sendReply()}
+            placeholder="Responde a esta historia..."/>
+          <div className="react-btn" onClick={sendReply} style={{fontSize:13,flexShrink:0}}>▶</div>
+          {['❤️','🔥'].map(e=>(
+            <div key={e} className={`react-btn ${reacted[e]?'on':''}`} onClick={()=>handleReact(e)}>{e}</div>
+          ))}
         </div>
       </div>
     </div>
@@ -602,7 +616,7 @@ function ExploreScreen(){
   const [q,setQ] = useState('');
   const fakeStory = (t) => ({id:t.tag, emoji:t.emoji, username:t.tag, display:t.tag, caption:`${t.tag} 🔥`, duration_ms:7500, created_at:new Date().toISOString()});
   return (
-    <div className="screen">
+    <div className="screen active">
       <div className="topbar">
         <div className="logo"><span className="logo-vs">VS</span><div className="logo-dot"/><div className="logo-sub"><span>EXPLORAR</span></div></div>
       </div>
@@ -659,8 +673,22 @@ function CreateScreen({onBack}){
   const recRef      = useRef(null);
   const chunksRef   = useRef([]);
   const timerRef    = useRef(null);
-  const videoRef    = useRef(null); // single video element, reused
+  const videoRef    = useRef(null);
+  const galleryRef  = useRef(null);
   const MAX = 7500;
+
+  const uploadFromGallery = (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    if(blobUrl) URL.revokeObjectURL(blobUrl);
+    const url = URL.createObjectURL(file);
+    setBlobUrl(url);
+    setBlobData(file);
+    setElapsed(MAX);
+    setPhase('preview');
+    setTimeout(()=>{ if(videoRef.current) attachBlob(videoRef.current, url); }, 80);
+    e.target.value='';
+  };
 
   const pct = Math.min(elapsed/MAX, 1);
   const dashOff = 120 - 120*pct;
@@ -808,7 +836,7 @@ function CreateScreen({onBack}){
   const showVideo = phase==='camera'||phase==='recording'||phase==='preview';
 
   return (
-    <div className="screen">
+    <div className="screen active">
       <div className="topbar">
         <div className="logo"><span className="logo-vs">VS</span><div className="logo-dot"/><div className="logo-sub"><span>NUEVO</span><span>VIDEO</span></div></div>
         <div className="icon-btn" style={{borderRadius:8}} onClick={()=>{ streamRef.current?.getTracks().forEach(t=>t.stop()); onBack(); }}>✕</div>
@@ -906,8 +934,11 @@ function CreateScreen({onBack}){
           {/* Right */}
           {(phase==='camera'||phase==='recording')
             ? <div className="rec-side" onClick={flip}>🔄</div>
-            : <div className="rec-side" style={{opacity:.25}}>⬆️</div>
+            : phase==='uploading'
+              ? <div className="rec-side" style={{opacity:.25}}>🖼️</div>
+              : <div className="rec-side" onClick={()=>galleryRef.current?.click()}>🖼️</div>
           }
+          <input ref={galleryRef} type="file" accept="video/*" style={{display:'none'}} onChange={uploadFromGallery}/>
         </div>
       </div>
     </div>
@@ -920,7 +951,7 @@ function CreateScreen({onBack}){
 function ActivityScreen(){
   const [notifs, setNotifs] = useState(DEMO_NOTIFS);
   return (
-    <div className="screen">
+    <div className="screen active">
       <div className="topbar">
         <div className="logo"><span className="logo-vs">VS</span><div className="logo-dot"/><div className="logo-sub"><span>ACTIVIDAD</span></div></div>
       </div>
@@ -1029,10 +1060,37 @@ function FollowersModal({open, onClose}){
    PROFILE
 ══════════════════════════════ */
 function ProfileScreen(){
-  const {user, myStories, openStory} = useApp();
+  const {user, myStories, openStory, toast, updateUser} = useApp();
   const [showFollowers, setShowFollowers] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const avatarInputRef = useRef(null);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    if(user?.id==='demo'){ toast('Regístrate para cambiar la foto',''); return; }
+    setUploading(true);
+    try {
+      let avatarUrl = URL.createObjectURL(file);
+      if(user?.id){
+        const ext = file.name.split('.').pop()||'jpg';
+        const path = `${user.id}/avatar.${ext}`;
+        const {error:upErr} = await sb.storage.from('avatars').upload(path, file, {upsert:true, contentType:file.type});
+        if(!upErr){
+          const {data:{publicUrl}} = sb.storage.from('avatars').getPublicUrl(path);
+          avatarUrl = publicUrl;
+          await sb.from('profiles').update({avatar_url:avatarUrl}).eq('id',user.id).catch(()=>{});
+        }
+      }
+      updateUser({...user, avatar_url:avatarUrl});
+      toast('Foto de perfil actualizada ✓','ok');
+    } catch(err){ toast(err.message||'Error al subir foto',''); }
+    setUploading(false);
+    e.target.value='';
+  };
+
   return (
-    <div className="screen">
+    <div className="screen active">
       <div className="topbar">
         <div className="logo"><span className="logo-vs">VS</span><div className="logo-dot"/><div className="logo-sub"><span>PERFIL</span></div></div>
         <div className="icon-btn" style={{borderRadius:8}}>⚙️</div>
@@ -1040,9 +1098,17 @@ function ProfileScreen(){
       <div className="profile-scroll">
         <div className="profile-hero">
           <div className="prof-orb">
-            <div className="prof-face">{user?.emoji||'🧑‍💻'}</div>
-            <div className="prof-edit">✏️</div>
+            <div className="prof-face">
+              {user?.avatar_url
+                ? <img src={user.avatar_url} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} alt=""/>
+                : user?.emoji||'🧑‍💻'
+              }
+            </div>
+            <div className="prof-edit" onClick={()=>avatarInputRef.current?.click()}>
+              {uploading?'⏳':'✏️'}
+            </div>
           </div>
+          <input ref={avatarInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleAvatarUpload}/>
           <p className="prof-name">{(user?.display_name||user?.username||'TU NOMBRE').toUpperCase()}</p>
           <p className="prof-handle">@{user?.username||'usuario'}</p>
           <p className="prof-bio">{user?.bio||'Dev & creador. Comparto mi día en pocos segundos.'}</p>
@@ -1211,6 +1277,8 @@ function App(){
     setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)), 3200);
   },[]);
 
+  const updateUser = useCallback((u)=>setUser(u),[]);
+
   const openStory = useCallback((story)=>{
     setActiveStory(story);
     setViewed(v=>new Set([...v, story.id]));
@@ -1238,7 +1306,7 @@ function App(){
 
   if(!user) return <AuthScreen onAuth={u=>{ setUser(u); if(u.id!=='demo') loadStories(); }}/>;
 
-  const ctx = {user, stories, myStories, openStory, addStory, viewed, sbReact, toast};
+  const ctx = {user, stories, myStories, openStory, addStory, viewed, sbReact, toast, updateUser};
 
   return (
     <Ctx.Provider value={ctx}>
