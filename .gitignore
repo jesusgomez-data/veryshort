@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Env (nunca subas credenciales reales)
+.env
+.env.local
+.env.*
+
+# Node (si migras a Vite en el futuro)
+node_modules/
+dist/
+.next/
+
+# Logs
+*.log

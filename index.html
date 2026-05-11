@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>VS· Very Short</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;600;700&family=Barlow+Condensed:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --k:#000;--k2:#0f0f0f;--k3:#1c1c1c;--k4:#2a2a2a;
+  --w:#fff;--w2:rgba(255,255,255,.85);--w3:rgba(255,255,255,.4);--w4:rgba(255,255,255,.08);
+  --r:#e8000a;--r2:#ff2233;--rg:rgba(232,0,10,.25);
+  --tabh:64px;
+  --FI:'Oswald',sans-serif;
+  --FB:'Barlow Condensed',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:#111;display:flex;align-items:center;justify-content:center;font-family:var(--FB);color:var(--w);}
+
+/* ─── SHELL ─── */
+#app{
+  width:min(390px,100vw);height:min(844px,100vh);
+  background:var(--k);border-radius:44px;overflow:hidden;
+  position:relative;display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08),0 40px 120px rgba(0,0,0,.95);
+}
+
+/* ─── SCREENS ─── */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--k);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+.screen.active{transform:translateX(0);}
+.screen.behind{transform:translateX(-30%);}
+
+/* ─── TOP BAR ─── */
+.topbar{
+  height:56px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;flex-shrink:0;z-index:2;background:var(--k);
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.logo{display:flex;align-items:center;gap:0;}
+.logo-vs{font-family:var(--FI);font-size:28px;font-weight:700;letter-spacing:-1px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--r);margin:0 4px 3px;box-shadow:0 0 10px var(--rg);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 6px var(--rg)}50%{opacity:.7;box-shadow:0 0 18px rgba(232,0,10,.6)}}
+.logo-sub{font-family:var(--FB);font-size:10px;font-weight:200;letter-spacing:3px;color:var(--w3);display:flex;flex-direction:column;line-height:1.15;}
+.topbar-right{display:flex;gap:8px;}
+.icon-btn{width:34px;height:34px;border-radius:8px;background:var(--k3);border:1px solid var(--w4);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;position:relative;transition:transform .12s;}
+.icon-btn:active{transform:scale(.88);}
+.icon-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--r);border:1.5px solid var(--k);}
+
+/* ─── SECTION RULE ─── */
+.rule{display:flex;align-items:center;gap:10px;padding:10px 16px 8px;flex-shrink:0;}
+.rule-bar{width:16px;height:2px;background:var(--r);border-radius:1px;}
+.rule-txt{font-family:var(--FI);font-size:10px;font-weight:500;letter-spacing:4px;color:rgba(255,255,255,.2);}
+.rule-line{flex:1;height:1px;background:var(--w4);}
+
+/* ─── ORBIT RINGS ─── */
+.strip-wrap{flex-shrink:0;position:relative;}
+.strip-wrap::before,.strip-wrap::after{content:'';position:absolute;top:0;bottom:0;width:20px;z-index:2;pointer-events:none;}
+.strip-wrap::before{left:0;background:linear-gradient(90deg,var(--k),transparent);}
+.strip-wrap::after{right:0;background:linear-gradient(-90deg,var(--k),transparent);}
+.strip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:4px 16px 14px;}
+.strip::-webkit-scrollbar{display:none;}
+.orb-item{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;cursor:pointer;}
+.orb-item:active .orb-ring{transform:scale(.88);}
+.orb-ring{border-radius:50%;padding:2.5px;transition:transform .14s;}
+.orb-ring.sz-xl{width:68px;height:68px;}.orb-ring.sz-lg{width:60px;height:60px;}.orb-ring.sz-md{width:52px;height:52px;}
+.orb-ring.fresh{background:conic-gradient(from 0deg,var(--r),rgba(232,0,10,.15),rgba(255,255,255,.5),var(--r));animation:spin 2.5s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.orb-item:active .orb-ring.fresh{animation:none;}
+.orb-ring.seen{background:var(--k4);}
+.orb-ring.add{background:transparent;border:2px dashed rgba(232,0,10,.3);padding:0;}
+.orb-face{width:100%;height:100%;border-radius:50%;background:var(--k3);border:2.5px solid var(--k);display:flex;align-items:center;justify-content:center;font-size:21px;overflow:hidden;}
+.orb-ring.add .orb-face{border:none;background:rgba(232,0,10,.06);color:var(--r);font-size:24px;}
+.orb-lbl{font-family:var(--FI);font-size:10px;letter-spacing:.5px;color:rgba(255,255,255,.3);max-width:60px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.orb-lbl.new{color:rgba(255,255,255,.8);}
+
+/* ─── MAP ORBITS ─── */
+.map-scroll{flex:1;overflow-y:auto;scrollbar-width:none;padding:4px 16px 8px;}
+.map-scroll::-webkit-scrollbar{display:none;}
+.map-row{display:flex;gap:10px;margin-bottom:16px;align-items:flex-end;}
+.map-row:nth-child(even){padding-left:30px;}
+.map-row:nth-child(odd){padding-right:30px;}
+.morb{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;}
+.morb:active .mring{transform:scale(.9);}
+.mring{border-radius:50%;padding:3px;transition:transform .14s;}
+.mring.sz-a{width:86px;height:86px;}.mring.sz-b{width:72px;height:72px;}.mring.sz-c{width:60px;height:60px;}
+.mring.fresh{background:conic-gradient(from 0deg,var(--r),rgba(232,0,10,.25),var(--r));animation:spin 4s linear infinite;box-shadow:0 4px 18px rgba(232,0,10,.12);}
+.mring.fresh.hot{background:conic-gradient(from 0deg,var(--r),rgba(255,255,255,.6),var(--r2),rgba(232,0,10,.2),var(--r));animation:spin 1.4s linear infinite;box-shadow:0 4px 28px rgba(232,0,10,.28);}
+.mring.seen{background:var(--k4);opacity:.4;}
+.mface{width:100%;height:100%;border-radius:50%;background:var(--k2);border:3px solid var(--k);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;font-size:28px;}
+.mring.sz-b .mface{font-size:23px;}.mring.sz-c .mface{font-size:19px;}
+.mbadge{position:absolute;bottom:-3px;right:-5px;background:var(--r);color:#fff;font-family:var(--FI);font-size:9px;padding:1px 5px;border-radius:3px;border:2px solid var(--k);}
+.minfo{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.mname{font-family:var(--FI);font-size:10px;letter-spacing:.5px;color:var(--w2);max-width:80px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mring.seen~.minfo .mname{color:rgba(255,255,255,.2);}
+.mtime{font-size:9px;color:rgba(255,255,255,.22);font-weight:200;}
+.live-tag{display:inline-flex;align-items:center;gap:3px;background:var(--r);font-family:var(--FI);font-size:8px;letter-spacing:2px;color:#fff;padding:2px 7px;border-radius:2px;}
+.live-tag i{width:4px;height:4px;border-radius:50%;background:#fff;animation:lp .8s ease-in-out infinite;}
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.1}}
+
+/* ─── STORY VIEWER ─── */
+.viewer{
+  position:absolute;inset:0;z-index:500;background:#000;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform .35s cubic-bezier(.22,1,.36,1);
+  border-radius:inherit;overflow:hidden;
+}
+.viewer.open{transform:translateY(0);}
+.viewer-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;background:#000;}
+.viewer-emoji{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:100px;z-index:0;}
+.viewer-top-grad{position:absolute;top:0;left:0;right:0;height:140px;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent);z-index:1;}
+.viewer-bot-grad{position:absolute;bottom:0;left:0;right:0;height:200px;background:linear-gradient(0deg,rgba(0,0,0,.85),transparent);z-index:1;}
+.viewer-bars{position:absolute;top:14px;left:14px;right:14px;z-index:2;display:flex;gap:4px;}
+.vbar{flex:1;height:2.5px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden;}
+.vbar-fill{height:100%;background:var(--r);border-radius:2px;width:0;}
+.vbar-fill.done{width:100%;}
+.viewer-user{position:absolute;top:30px;left:14px;right:14px;z-index:2;display:flex;align-items:center;gap:10px;}
+.viewer-av{width:34px;height:34px;border-radius:50%;border:2px solid var(--r);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;background:var(--k3);}
+.viewer-name{font-family:var(--FI);font-size:14px;letter-spacing:1.5px;color:#fff;}
+.viewer-ago{font-size:10px;color:rgba(255,255,255,.45);font-weight:200;}
+.viewer-close{margin-left:auto;width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;font-size:14px;}
+.viewer-bottom{position:absolute;bottom:0;left:0;right:0;padding:14px 16px 30px;z-index:2;}
+.viewer-caption{font-family:var(--FI);font-size:18px;color:#fff;margin-bottom:12px;line-height:1.2;letter-spacing:.3px;}
+.viewer-reply-row{display:flex;gap:8px;align-items:center;}
+.viewer-input{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:10px 14px;color:#fff;font-family:var(--FB);font-size:13px;font-weight:300;outline:none;}
+.viewer-input::placeholder{color:rgba(255,255,255,.3);}
+.react-btn{width:38px;height:38px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;transition:transform .12s;}
+.react-btn:active{transform:scale(1.2);}
+.react-btn.on{background:rgba(232,0,10,.2);border-color:var(--r);}
+
+/* ─── EXPLORE ─── */
+.search-wrap{padding:6px 16px 12px;flex-shrink:0;}
+.search-box{display:flex;align-items:center;gap:10px;background:var(--k3);border-radius:10px;padding:11px 14px;border:1px solid var(--w4);}
+.search-box:focus-within{border-color:rgba(232,0,10,.3);}
+.search-box input{flex:1;background:none;border:none;outline:none;color:var(--w);font-family:var(--FB);font-size:14px;font-weight:300;}
+.search-box input::placeholder{color:rgba(255,255,255,.2);}
+.ex-scroll{flex:1;overflow-y:auto;scrollbar-width:none;padding:0 16px calc(var(--tabh)+20px);}
+.ex-scroll::-webkit-scrollbar{display:none;}
+.ex-block{margin-bottom:26px;}
+.ex-heading{font-family:var(--FI);font-size:20px;font-weight:700;letter-spacing:2px;color:var(--w);margin-bottom:14px;display:flex;align-items:baseline;gap:10px;}
+.ex-heading span{font-family:var(--FB);font-size:10px;font-weight:200;letter-spacing:3px;color:rgba(255,255,255,.2);}
+.ex-strip{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.ex-strip::-webkit-scrollbar{display:none;}
+.ex-orb{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;flex-shrink:0;}
+.ex-orb:active .ex-ring{transform:scale(.9);}
+.ex-ring{width:64px;height:64px;border-radius:50%;padding:3px;transition:transform .14s;background:conic-gradient(from 0deg,var(--r),rgba(232,0,10,.15),var(--r));animation:spin 3s linear infinite;}
+.ex-face{width:100%;height:100%;border-radius:50%;background:var(--k3);border:2px solid var(--k);display:flex;align-items:center;justify-content:center;font-size:25px;}
+.ex-lbl{font-family:var(--FI);font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,.28);text-align:center;}
+.ex-cnt{font-size:9px;color:var(--r);font-weight:500;}
+
+/* ─── CAMERA / CREATE ─── */
+.create-screen{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:var(--tabh);}
+.cam-stage{
+  flex:1;position:relative;overflow:hidden;background:#000;
+  display:flex;align-items:center;justify-content:center;
+}
+/* letterbox bars */
+.cam-stage::before,.cam-stage::after{content:'';position:absolute;left:0;right:0;height:44px;background:#000;z-index:3;pointer-events:none;}
+.cam-stage::before{top:0;}.cam-stage::after{bottom:0;}
+
+.cam-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;}
+.cam-video.mirror{transform:scaleX(-1);}
+
+.cam-idle-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  width:150px;height:150px;border-radius:50%;cursor:pointer;z-index:2;
+  background:rgba(232,0,10,.07);border:2px solid rgba(232,0,10,.25);
+  transition:all .2s;
+}
+.cam-idle-btn:active{background:rgba(232,0,10,.15);transform:scale(.95);}
+.cam-idle-btn span{font-size:40px;}
+.cam-idle-btn p{font-family:var(--FI);font-size:11px;letter-spacing:3px;color:rgba(232,0,10,.7);}
+
+.cam-err{
+  position:absolute;bottom:60px;left:20px;right:20px;z-index:4;
+  background:rgba(232,0,10,.12);border:1px solid rgba(232,0,10,.3);border-radius:8px;
+  padding:12px 16px;font-family:var(--FB);font-size:13px;font-weight:300;
+  color:rgba(255,255,255,.7);text-align:center;
+}
+
+/* Timer arc */
+.timer-wrap{position:absolute;top:52px;right:16px;width:44px;height:44px;z-index:4;}
+.timer-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
+.timer-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:3;}
+.timer-arc{fill:none;stroke:var(--r);stroke-width:3;stroke-linecap:round;stroke-dasharray:120;stroke-dashoffset:120;transition:stroke-dashoffset .1s linear;filter:drop-shadow(0 0 3px var(--r));}
+.timer-lbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--FI);font-size:11px;font-weight:600;color:var(--r);letter-spacing:1px;}
+
+/* REC indicator */
+.rec-ind{
+  position:absolute;top:52px;left:16px;z-index:4;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(0,0,0,.55);border-radius:4px;padding:4px 10px;
+  backdrop-filter:blur(4px);
+}
+.rec-dot{width:7px;height:7px;border-radius:50%;background:var(--r);animation:lp .7s ease-in-out infinite;}
+.rec-txt{font-family:var(--FI);font-size:10px;letter-spacing:2px;color:#fff;}
+
+/* Upload overlay */
+.upload-overlay{position:absolute;inset:0;background:rgba(0,0,0,.8);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border-radius:inherit;}
+.upload-spinner{width:52px;height:52px;border-radius:50%;border:3px solid rgba(255,255,255,.1);border-top-color:var(--r);animation:spin .8s linear infinite;}
+.upload-lbl{font-family:var(--FI);font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.5);}
+
+/* Caption input overlay */
+.cap-input-wrap{position:absolute;bottom:52px;left:16px;right:16px;z-index:4;}
+.cap-input{width:100%;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:11px 14px;color:#fff;font-family:var(--FB);font-size:14px;font-weight:300;outline:none;backdrop-filter:blur(8px);}
+.cap-input::placeholder{color:rgba(255,255,255,.3);}
+
+/* Tools bar */
+.tools-bar{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;padding:10px 12px 6px;background:var(--k2);border-top:1px solid rgba(255,255,255,.04);}
+.tools-bar::-webkit-scrollbar{display:none;}
+.tool-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px 11px;border-radius:8px;cursor:pointer;flex-shrink:0;border:none;background:transparent;transition:background .14s;}
+.tool-btn:active{background:var(--k3);}
+.tool-ic{width:40px;height:40px;border-radius:10px;background:var(--k3);display:flex;align-items:center;justify-content:center;font-size:17px;border:1px solid var(--w4);}
+.tool-lbl{font-family:var(--FI);font-size:8px;letter-spacing:1px;color:rgba(255,255,255,.22);}
+
+/* Bottom record row */
+.rec-row{display:flex;align-items:center;justify-content:center;gap:28px;padding:12px 20px 14px;background:var(--k2);}
+.rec-side{width:42px;height:42px;border-radius:50%;background:var(--k3);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:1px solid var(--w4);transition:transform .13s;}
+.rec-side:active{transform:scale(.88);}
+.rec-btn{width:72px;height:72px;border-radius:50%;border:3px solid var(--r);display:flex;align-items:center;justify-content:center;cursor:pointer;animation:recPulse 2s ease-out infinite;transition:all .15s;}
+@keyframes recPulse{0%{box-shadow:0 0 0 0 rgba(232,0,10,.3)}70%{box-shadow:0 0 0 12px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.rec-btn.stop{animation:none;background:var(--r);border-color:var(--r2);}
+.rec-btn.post{animation:none;border-color:var(--r);}
+.rec-core{width:48px;height:48px;border-radius:50%;background:var(--r);box-shadow:0 4px 16px rgba(232,0,10,.4);}
+.rec-core.square{border-radius:8px;width:22px;height:22px;}
+.post-lbl{font-family:var(--FI);font-size:10px;letter-spacing:2px;color:#fff;}
+
+/* ─── NOTIFICATIONS ─── */
+.notif-scroll{flex:1;overflow-y:auto;scrollbar-width:none;padding:0 16px calc(var(--tabh)+16px);}
+.notif-scroll::-webkit-scrollbar{display:none;}
+.notif-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;}
+.notif-item:active{opacity:.6;}
+.notif-bar{width:3px;height:32px;border-radius:2px;flex-shrink:0;}
+.notif-bar.new{background:var(--r);}.notif-bar.old{background:transparent;}
+.notif-ring{width:40px;height:40px;border-radius:50%;padding:2.5px;flex-shrink:0;}
+.notif-ring.fr{background:conic-gradient(from 0deg,var(--r),rgba(232,0,10,.2),var(--r));animation:spin 3s linear infinite;}
+.notif-ring.se{background:var(--k4);}
+.notif-face{width:100%;height:100%;border-radius:50%;background:var(--k3);border:2px solid var(--k);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.notif-txt{flex:1;font-size:13px;font-weight:300;line-height:1.4;color:rgba(255,255,255,.5);}
+.notif-txt strong{color:var(--w);font-weight:400;}
+.notif-time{font-family:var(--FI);font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.2);}
+
+/* ─── PROFILE ─── */
+.profile-scroll{flex:1;overflow-y:auto;scrollbar-width:none;padding-bottom:calc(var(--tabh)+16px);}
+.profile-scroll::-webkit-scrollbar{display:none;}
+.profile-hero{display:flex;flex-direction:column;align-items:center;padding:24px 16px 20px;border-bottom:1px solid var(--k4);position:relative;overflow:hidden;}
+.profile-hero::before{content:'VS';position:absolute;right:-8px;top:-8px;font-family:var(--FI);font-size:150px;font-weight:700;color:rgba(232,0,10,.035);line-height:1;pointer-events:none;}
+.prof-orb{width:90px;height:90px;border-radius:50%;padding:3px;background:conic-gradient(from 0deg,var(--r),rgba(255,255,255,.3),var(--r2),rgba(232,0,10,.2),var(--r));animation:spin 6s linear infinite;margin-bottom:12px;position:relative;}
+.prof-face{width:100%;height:100%;border-radius:50%;background:var(--k3);border:3px solid var(--k);display:flex;align-items:center;justify-content:center;font-size:34px;}
+.prof-edit{position:absolute;bottom:1px;right:1px;width:24px;height:24px;border-radius:6px;background:var(--r);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid var(--k);cursor:pointer;}
+.prof-name{font-family:var(--FI);font-size:26px;font-weight:700;letter-spacing:3px;}
+.prof-handle{font-size:12px;font-weight:300;color:rgba(255,255,255,.3);margin-bottom:9px;}
+.prof-bio{font-size:13px;font-weight:300;color:rgba(255,255,255,.4);text-align:center;line-height:1.5;max-width:260px;margin-bottom:18px;}
+.prof-stats{display:flex;width:100%;}
+.pstat{flex:1;padding:12px 0;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;border-top:1px solid var(--k4);}
+.pstat:not(:last-child){border-right:1px solid var(--k4);}
+.pstat-n{font-family:var(--FI);font-size:22px;font-weight:700;letter-spacing:1px;color:var(--r);}
+.pstat-l{font-family:var(--FI);font-size:8px;letter-spacing:3px;color:rgba(255,255,255,.2);}
+.my-stories-grid{display:flex;flex-wrap:wrap;gap:12px;padding:6px 16px 16px;}
+.my-story{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;width:calc(33.33% - 8px);}
+.my-story:active .ms-ring{transform:scale(.9);}
+.ms-ring{width:78px;height:78px;border-radius:50%;padding:3px;transition:transform .13s;}
+.ms-ring.fr{background:conic-gradient(from 0deg,var(--r),rgba(232,0,10,.25),var(--r));animation:spin 4s linear infinite;}
+.ms-ring.se{background:var(--k4);opacity:.55;}
+.ms-face{width:100%;height:100%;border-radius:50%;background:var(--k3);border:2.5px solid var(--k);display:flex;align-items:center;justify-content:center;font-size:27px;position:relative;overflow:hidden;}
+.ms-dur{position:absolute;bottom:4px;right:4px;font-family:var(--FI);font-size:7px;letter-spacing:1px;color:var(--r);background:rgba(0,0,0,.85);padding:1px 5px;border-radius:2px;}
+.ms-views{font-size:9px;font-weight:300;color:rgba(255,255,255,.22);}
+
+/* ─── FOLLOWERS MODAL ─── */
+.modal-overlay{position:absolute;inset:0;z-index:600;background:rgba(0,0,0,.8);backdrop-filter:blur(5px);display:flex;align-items:flex-end;border-radius:inherit;overflow:hidden;}
+.modal-sheet{width:100%;background:var(--k2);border-radius:22px 22px 0 0;border-top:1px solid rgba(255,255,255,.07);max-height:80%;display:flex;flex-direction:column;animation:sheetUp .3s cubic-bezier(.22,1,.36,1);}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:34px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin:12px auto 0;flex-shrink:0;}
+.modal-close-x{position:absolute;top:16px;right:16px;width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;}
+.modal-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;margin-top:14px;}
+.modal-tab{flex:1;padding:10px 0;text-align:center;font-family:var(--FI);font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.3);cursor:pointer;border:none;background:transparent;position:relative;transition:color .15s;}
+.modal-tab.on{color:var(--w);}
+.modal-tab.on::after{content:'';position:absolute;bottom:-1px;left:20%;right:20%;height:2px;background:var(--r);border-radius:1px;}
+.modal-list{flex:1;overflow-y:auto;scrollbar-width:none;padding:8px 0 24px;}
+.modal-list::-webkit-scrollbar{display:none;}
+.user-row{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background .12s;position:relative;}
+.user-row:active{background:rgba(255,255,255,.03);}
+.user-orb{width:46px;height:46px;border-radius:50%;padding:2.5px;flex-shrink:0;}
+.user-orb.fr{background:conic-gradient(from 0deg,var(--r),rgba(232,0,10,.15),var(--r));animation:spin 3s linear infinite;}
+.user-orb.se{background:var(--k4);}
+.user-face{width:100%;height:100%;border-radius:50%;background:var(--k3);border:2px solid var(--k2);display:flex;align-items:center;justify-content:center;font-size:19px;}
+.user-info{flex:1;min-width:0;}
+.user-name-t{font-family:var(--FI);font-size:14px;letter-spacing:1px;color:var(--w);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-sub{font-size:11px;font-weight:300;color:rgba(255,255,255,.28);margin-top:1px;}
+.user-actions{display:flex;gap:7px;flex-shrink:0;}
+.follow-btn{height:28px;padding:0 12px;border-radius:6px;font-family:var(--FI);font-size:9px;letter-spacing:1.5px;cursor:pointer;border:none;transition:all .13s;}
+.follow-btn:active{transform:scale(.92);}
+.follow-btn.follow{background:var(--r);color:#fff;}
+.follow-btn.following{background:transparent;color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.12);}
+.msg-btn{width:28px;height:28px;border-radius:6px;background:var(--k3);border:1px solid var(--w4);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;}
+.story-live-dot{position:absolute;left:12px;top:10px;width:9px;height:9px;border-radius:50%;background:var(--r);border:2px solid var(--k2);}
+
+/* ─── CHAT MODAL ─── */
+.chat-body{flex:1;overflow-y:auto;scrollbar-width:none;padding:10px 14px;display:flex;flex-direction:column;gap:9px;}
+.chat-body::-webkit-scrollbar{display:none;}
+.bubble{max-width:74%;padding:9px 14px;font-size:13px;font-weight:300;line-height:1.45;border-radius:12px;}
+.bubble.them{background:var(--k3);color:rgba(255,255,255,.75);align-self:flex-start;border-radius:0 12px 12px 12px;}
+.bubble.me{background:var(--r);color:#fff;align-self:flex-end;border-radius:12px 0 12px 12px;}
+.chat-input-row{display:flex;gap:8px;padding:10px 14px 20px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;}
+.chat-inp{flex:1;background:var(--k3);border:1px solid var(--w4);border-radius:8px;padding:10px 14px;color:#fff;font-family:var(--FB);font-size:13px;font-weight:300;outline:none;}
+.chat-inp::placeholder{color:rgba(255,255,255,.25);}
+.chat-send{width:40px;height:40px;border-radius:8px;background:var(--r);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;}
+
+/* ─── AUTH ─── */
+.auth-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;gap:0;background:var(--k);}
+.auth-logo-big{font-family:var(--FI);font-size:52px;font-weight:700;display:flex;align-items:center;gap:0;margin-bottom:6px;}
+.auth-logo-dot{width:10px;height:10px;border-radius:50%;background:var(--r);margin:0 6px 8px;box-shadow:0 0 14px var(--rg);}
+.auth-tagline{font-family:var(--FB);font-size:12px;font-weight:200;letter-spacing:3px;color:rgba(255,255,255,.25);text-transform:uppercase;margin-bottom:36px;}
+.auth-form{width:100%;display:flex;flex-direction:column;gap:11px;}
+.auth-inp{width:100%;background:var(--k3);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px 16px;color:var(--w);font-family:var(--FB);font-size:15px;font-weight:300;outline:none;transition:border-color .2s;}
+.auth-inp:focus{border-color:rgba(232,0,10,.4);}
+.auth-inp::placeholder{color:rgba(255,255,255,.2);}
+.auth-submit{width:100%;padding:14px;border-radius:8px;background:var(--r);border:none;color:#fff;font-family:var(--FI);font-size:15px;font-weight:600;letter-spacing:3px;cursor:pointer;transition:all .14s;box-shadow:0 6px 20px rgba(232,0,10,.28);}
+.auth-submit:active{transform:scale(.97);}
+.auth-submit:disabled{opacity:.4;cursor:not-allowed;}
+.auth-ghost{width:100%;padding:13px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);font-family:var(--FI);font-size:14px;letter-spacing:2px;cursor:pointer;transition:all .14s;}
+.auth-ghost:active{background:rgba(255,255,255,.04);}
+.auth-div{display:flex;align-items:center;gap:12px;margin:4px 0;}
+.auth-div-line{flex:1;height:1px;background:rgba(255,255,255,.07);}
+.auth-div-txt{font-size:11px;color:rgba(255,255,255,.2);letter-spacing:2px;}
+.auth-err{background:rgba(232,0,10,.1);border:1px solid rgba(232,0,10,.28);border-radius:7px;padding:10px 14px;font-size:13px;font-weight:300;color:var(--r);text-align:center;}
+.auth-switch{font-size:12px;font-weight:300;color:rgba(255,255,255,.28);text-align:center;margin-top:8px;cursor:pointer;}
+.auth-switch em{color:var(--r);font-style:normal;font-weight:400;}
+
+/* ─── TAB BAR ─── */
+.tabbar{
+  height:var(--tabh);display:flex;align-items:center;justify-content:space-around;
+  background:var(--k);position:absolute;bottom:0;left:0;right:0;z-index:100;
+  padding:0 4px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;
+}
+.tabbar::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--r),transparent);opacity:.3;}
+.tab-btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:7px 10px;border-radius:10px;border:none;background:transparent;flex:1;transition:all .13s;position:relative;}
+.tab-btn:active{transform:scale(.88);}
+.tab-icon{font-size:19px;filter:grayscale(1) opacity(.25);transition:filter .18s;}
+.tab-lbl{font-family:var(--FI);font-size:8px;letter-spacing:2.5px;color:rgba(255,255,255,.2);transition:color .18s;}
+.tab-btn.on .tab-icon{filter:none;}
+.tab-btn.on .tab-lbl{color:var(--r);}
+.tab-mark{position:absolute;top:0;left:50%;transform:translateX(-50%);width:16px;height:2px;background:var(--r);opacity:0;border-radius:0 0 2px 2px;transition:opacity .18s;box-shadow:0 2px 6px var(--rg);}
+.tab-btn.on .tab-mark{opacity:1;}
+/* Diamond center button */
+.tab-diamond{width:52px;height:52px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;flex-shrink:0;position:relative;top:-8px;transition:transform .13s;}
+.tab-diamond::before{content:'';position:absolute;inset:0;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);background:conic-gradient(from 0deg,var(--r),rgba(232,0,10,.15),var(--r));animation:spin 4s linear infinite;}
+.tab-diamond::after{content:'';position:absolute;inset:4px;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);background:var(--r);box-shadow:0 0 18px rgba(232,0,10,.5);}
+.tab-diamond:active{transform:scale(.88) translateY(-8px);}
+.tab-diamond svg{position:relative;z-index:1;width:14px;height:14px;fill:#fff;}
+
+/* ─── TOAST ─── */
+.toast-stack{position:absolute;top:64px;left:0;right:0;z-index:800;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;}
+.toast-item{background:var(--k3);border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--r);border-radius:8px;padding:10px 16px;font-size:13px;font-weight:300;color:var(--w);animation:toastIn .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.toast-item.ok{border-left-color:#00cc66;}
+@keyframes toastIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── LOADING ─── */
+.vs-loader{position:absolute;inset:0;background:var(--k);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:900;}
+.vs-diamond{width:38px;height:38px;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);background:var(--r);animation:spin 1s linear infinite;}
+.vs-loader-txt{font-family:var(--FI);font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.2);}
+
+/* empty */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;flex:1;padding:40px;}
+.empty-state p{font-family:var(--FI);font-size:14px;letter-spacing:2px;color:rgba(255,255,255,.18);text-align:center;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="root"></div>
+</div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, createContext, useContext, useMemo } = React;
+
+/* ══════════════════════════════
+   SUPABASE
+══════════════════════════════ */
+const SB_URL  = 'https://uprqlonrzrylwcpudmcr.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwcnFsb25yenJ5bHdjcHVkbWNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMjc0MDMsImV4cCI6MjA5MzkwMzQwM30.Y-Hg3KuDGMImkDnQb_Omssdp-a7WIoEZ5SwI7JRJZtM';
+const sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+/* ══════════════════════════════
+   DEMO DATA
+══════════════════════════════ */
+const DEMO = [
+  {id:'d1',emoji:'🏃',username:'CARLA.RUN',display:'carla.run',caption:'Cardio 5AM 🔥',duration_ms:7200,created_at:new Date(Date.now()-120e3).toISOString(),view_count:412,is_live:true,story_count:1},
+  {id:'d2',emoji:'🎸',username:'LUNA.M',display:'luna.m',caption:'Riff nuevo ✨',duration_ms:6800,created_at:new Date(Date.now()-300e3).toISOString(),view_count:921,story_count:1},
+  {id:'d3',emoji:'🍜',username:'TOMÁS',display:'tomás',caption:'Ramen casero 😅',duration_ms:7500,created_at:new Date(Date.now()-540e3).toISOString(),view_count:203,story_count:1},
+  {id:'d4',emoji:'📸',username:'DANI.FOTO',display:'dani.foto',caption:'Golden hour 📸',duration_ms:5500,created_at:new Date(Date.now()-900e3).toISOString(),view_count:788,story_count:2},
+  {id:'d5',emoji:'🌅',username:'KAI.WAVE',display:'kai.wave',caption:'El amanecer ☀️',duration_ms:7500,created_at:new Date(Date.now()-180e3).toISOString(),view_count:2100,is_live:true,story_count:3},
+  {id:'d6',emoji:'💡',username:'VERA.ARTS',display:'vera.arts',caption:'Mi idea de hoy 💡',duration_ms:6200,created_at:new Date(Date.now()-420e3).toISOString(),view_count:882,story_count:1},
+  {id:'d7',emoji:'🚴',username:'ALEX',display:'alex.lift',caption:'Bici al amanecer',duration_ms:7100,created_at:new Date(Date.now()-540e3).toISOString(),view_count:334,story_count:1},
+  {id:'d8',emoji:'🎨',username:'SOFIA.P',display:'sofia.p',caption:'Acuarela 🎨',duration_ms:7500,created_at:new Date(Date.now()-720e3).toISOString(),view_count:1440,story_count:2},
+  {id:'d9',emoji:'🌿',username:'RIO.ZEN',display:'rio.zen',caption:'Meditación 🧘',duration_ms:6500,created_at:new Date(Date.now()-1260e3).toISOString(),view_count:556,story_count:1},
+  {id:'d10',emoji:'🎵',username:'MILO.BEATS',display:'milo.beats',caption:'Beat nuevo 🎧',duration_ms:7500,created_at:new Date(Date.now()-1560e3).toISOString(),view_count:3800,story_count:4},
+];
+
+const DEMO_NOTIFS = [
+  {id:'n1',actor:'carla.run',emoji:'🏃',text:'reaccionó a tu video con 🔥',time:'1M',isNew:true},
+  {id:'n2',actor:'vera.arts',emoji:'🎨',text:'y +12 empezaron a seguirte',time:'5M',isNew:true},
+  {id:'n3',actor:'alex.lift',emoji:'🚴',text:'respondió tu historia',time:'12M',isNew:true},
+  {id:'n4',actor:'kai.wave',emoji:'🌊',text:'compartió tu historia',time:'2H',isNew:false},
+  {id:'n5',actor:null,emoji:'🎯',text:'Tu video alcanzó 1,000 vistas',time:'4H',isNew:false},
+];
+
+const DEMO_FOLLOWERS = [
+  {id:'f1',emoji:'🏃',name:'CARLA.RUN',sub:'412 seguidores',following:true,hasStory:true},
+  {id:'f2',emoji:'🎸',name:'LUNA.M',sub:'1.2k seguidores',following:true,hasStory:true},
+  {id:'f3',emoji:'🎵',name:'MILO.BEATS',sub:'3.4k seguidores',following:false,hasStory:true},
+  {id:'f4',emoji:'🌊',name:'KAI.WAVE',sub:'8.1k seguidores',following:true,hasStory:false},
+  {id:'f5',emoji:'📸',name:'DANI.FOTO',sub:'920 seguidores',following:false,hasStory:false},
+];
+
+function timeAgo(iso){
+  const m=Math.floor((Date.now()-new Date(iso))/60000);
+  if(m<1)return'AHORA';if(m<60)return`${m}M`;
+  const h=Math.floor(m/60);if(h<24)return`${h}H`;return`${Math.floor(h/24)}D`;
+}
+
+/* ══════════════════════════════
+   CONTEXT
+══════════════════════════════ */
+const Ctx = createContext(null);
+const useApp = () => useContext(Ctx);
+
+/* ══════════════════════════════
+   TOAST
+══════════════════════════════ */
+function Toasts({list}){
+  return <div className="toast-stack">
+    {list.map(t=><div key={t.id} className={`toast-item ${t.ok?'ok':''}`}>{t.msg}</div>)}
+  </div>;
+}
+
+/* ══════════════════════════════
+   STORY VIEWER
+══════════════════════════════ */
+function StoryViewer({story, onClose}){
+  const {sbReact, user} = useApp();
+  const barRef = useRef(null);
+  const timerRef = useRef(null);
+  const [reacted, setReacted] = useState({});
+  const dur = (story?.duration_ms || 7000);
+
+  // Determine video src
+  const videoSrc = story
+    ? story.blobUrl || (story.video_url && !story.video_url.startsWith('demo://') ? story.video_url : null)
+    : null;
+
+  useEffect(()=>{
+    if(!story) return;
+    setReacted({});
+    // restart bar
+    const bar = barRef.current;
+    if(bar){ bar.style.transition='none'; bar.style.width='0%'; void bar.offsetWidth; bar.style.transition=`width ${dur/1000}s linear`; bar.style.width='100%'; }
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(onClose, dur);
+    return ()=>{ clearTimeout(timerRef.current); };
+  },[story?.id]);
+
+  const handleReact = async (emoji) => {
+    setReacted(r=>({...r,[emoji]:!r[emoji]}));
+    if(sbReact && user && story) {
+      await sb.from('reactions').upsert({story_id:story.id, user_id:user.id, emoji}).catch(()=>{});
+    }
+  };
+
+  return (
+    <div className={`viewer ${story?'open':''}`}>
+      {/* video or emoji bg */}
+      {videoSrc
+        ? <video key={videoSrc} src={videoSrc} className="viewer-video" autoPlay playsInline loop muted={false}
+            onError={e=>{e.target.style.display='none';}}/>
+        : <div className="viewer-emoji" style={{background:'radial-gradient(ellipse,#180606,#000)'}}>{story?.emoji||'🎬'}</div>
+      }
+
+      <div className="viewer-top-grad"/>
+      <div className="viewer-bot-grad"/>
+
+      {/* Progress */}
+      <div className="viewer-bars">
+        <div className="vbar"><div className="vbar-fill done"/></div>
+        <div className="vbar"><div ref={barRef} className="vbar-fill" style={{transition:'none',width:'0%'}}/></div>
+        <div className="vbar"><div className="vbar-fill"/></div>
+      </div>
+
+      {/* User */}
+      <div className="viewer-user">
+        <div className="viewer-av">{story?.emoji||'🎬'}</div>
+        <div>
+          <p className="viewer-name">{story?.username}</p>
+          <p className="viewer-ago">{story?timeAgo(story.created_at):''}</p>
+        </div>
+        <div className="viewer-close" onClick={onClose}>✕</div>
+      </div>
+
+      {/* Bottom */}
+      <div className="viewer-bottom">
+        <p className="viewer-caption">{story?.caption}</p>
+        <div className="viewer-reply-row">
+          <input className="viewer-input" placeholder="Responde a esta historia..."/>
+          <div className="viewer-reply-row" style={{gap:6}}>
+            {['❤️','🔥'].map(e=>(
+              <div key={e} className={`react-btn ${reacted[e]?'on':''}`} onClick={()=>handleReact(e)}>{e}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   FEED
+══════════════════════════════ */
+function FeedScreen({onRecord}){
+  const {stories, openStory, viewed} = useApp();
+  const top = stories.slice(0,5);
+  const mapS = stories.slice(5);
+  const rows = [mapS.slice(0,3), mapS.slice(3,6), mapS.slice(6,9)];
+  const sizes = ['sz-a','sz-b','sz-c'];
+
+  return (
+    <div className="screen active">
+      <div className="topbar">
+        <div className="logo">
+          <span className="logo-vs">VS</span><div className="logo-dot"/>
+          <div className="logo-sub"><span>VERY</span><span>SHORT</span></div>
+        </div>
+        <div className="topbar-right">
+          <div className="icon-btn">🔔<div className="icon-dot"/></div>
+          <div className="icon-btn">💬</div>
+        </div>
+      </div>
+
+      <div className="rule"><div className="rule-bar"/><span className="rule-txt">SIGUIENDO</span><div className="rule-line"/></div>
+
+      <div className="strip-wrap">
+        <div className="strip">
+          <div className="orb-item" onClick={onRecord}>
+            <div className="orb-ring add sz-xl"><div className="orb-face">＋</div></div>
+            <span className="orb-lbl new">TÚ</span>
+          </div>
+          {top.map((s,i)=>(
+            <div key={s.id} className="orb-item" onClick={()=>openStory(s)}>
+              <div className={`orb-ring ${viewed.has(s.id)?'seen':'fresh'} ${i===0?'sz-xl':i<3?'sz-lg':'sz-md'}`}>
+                <div className="orb-face">{s.emoji}</div>
+              </div>
+              <span className={`orb-lbl ${viewed.has(s.id)?'':'new'}`}>{s.display}</span>
+            </div>
+          ))}
+          {[{e:'🧑‍🍳',n:'mark'},{e:'🌊',n:'kai_old'}].map(x=>(
+            <div key={x.n} className="orb-item">
+              <div className="orb-ring seen sz-md"><div className="orb-face">{x.e}</div></div>
+              <span className="orb-lbl">{x.n}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rule"><div className="rule-bar"/><span className="rule-txt">ACTIVOS AHORA</span><div className="rule-line"/></div>
+
+      <div className="map-scroll">
+        {rows.map((row,ri)=>(
+          <div key={ri} className="map-row">
+            {row.map((s,si)=>(
+              <div key={s.id} className="morb" onClick={()=>!viewed.has(s.id)&&openStory(s)}>
+                <div className={`mring ${sizes[si]} ${viewed.has(s.id)?'seen':s.is_live?'fresh hot':'fresh'}`}>
+                  <div className="mface">
+                    {s.emoji}
+                    {s.story_count>1 && <div className="mbadge">×{s.story_count}</div>}
+                  </div>
+                </div>
+                <div className="minfo">
+                  <span className="mname">{s.username}</span>
+                  {s.is_live
+                    ? <span className="live-tag"><i/>LIVE</span>
+                    : <span className="mtime">{timeAgo(s.created_at)}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   EXPLORE
+══════════════════════════════ */
+const TRENDING = [{emoji:'🏄',tag:'#SURF',cnt:'4.2K'},{emoji:'🎨',tag:'#ARTE',cnt:'11K'},{emoji:'🍃',tag:'#DÍA',cnt:'7.8K'},{emoji:'🎵',tag:'#MÚSICA',cnt:'18K'},{emoji:'✈️',tag:'#VIAJE',cnt:'3.1K'}];
+const SUGGESTED = [{emoji:'💪',tag:'FIT.CREW',cnt:'892'},{emoji:'🌸',tag:'BLOOM',cnt:'2.1K'},{emoji:'🍕',tag:'PIZZA',cnt:'440'}];
+
+function ExploreScreen(){
+  const {openStory} = useApp();
+  const [q,setQ] = useState('');
+  const fakeStory = (t) => ({id:t.tag, emoji:t.emoji, username:t.tag, display:t.tag, caption:`${t.tag} 🔥`, duration_ms:7500, created_at:new Date().toISOString()});
+  return (
+    <div className="screen">
+      <div className="topbar">
+        <div className="logo"><span className="logo-vs">VS</span><div className="logo-dot"/><div className="logo-sub"><span>EXPLORAR</span></div></div>
+      </div>
+      <div className="search-wrap">
+        <div className="search-box">
+          <span style={{fontFamily:'Oswald',fontSize:11,letterSpacing:2,color:'var(--r)',opacity:.6}}>▶</span>
+          <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Busca historias, personas..."/>
+        </div>
+      </div>
+      <div className="ex-scroll">
+        <div className="ex-block">
+          <div className="ex-heading">TRENDING <span>ahora</span></div>
+          <div className="ex-strip">
+            {TRENDING.map(t=>(
+              <div key={t.tag} className="ex-orb" onClick={()=>openStory(fakeStory(t))}>
+                <div className="ex-ring"><div className="ex-face">{t.emoji}</div></div>
+                <span className="ex-lbl">{t.tag}</span>
+                <span className="ex-cnt">{t.cnt}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="ex-block">
+          <div className="ex-heading">PARA TI <span>sugeridos</span></div>
+          <div className="ex-strip">
+            {SUGGESTED.map(t=>(
+              <div key={t.tag} className="ex-orb" onClick={()=>openStory(fakeStory(t))}>
+                <div className="ex-ring"><div className="ex-face">{t.emoji}</div></div>
+                <span className="ex-lbl">{t.tag}</span>
+                <span className="ex-cnt">{t.cnt}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   CAMERA / CREATE  ← FULLY FUNCTIONAL
+══════════════════════════════ */
+function CreateScreen({onBack}){
+  const {user, addStory, toast} = useApp();
+  const [phase, setPhase]   = useState('idle'); // idle|camera|recording|preview|uploading
+  const [elapsed, setElapsed] = useState(0);
+  const [caption, setCaption] = useState('');
+  const [facing, setFacing]   = useState('user');
+  const [camErr, setCamErr]   = useState('');
+  const [blobUrl, setBlobUrl] = useState(null);
+  const [blobData, setBlobData] = useState(null);
+
+  const streamRef   = useRef(null);
+  const recRef      = useRef(null);
+  const chunksRef   = useRef([]);
+  const timerRef    = useRef(null);
+  const videoRef    = useRef(null); // single video element, reused
+  const MAX = 7500;
+
+  const pct = Math.min(elapsed/MAX, 1);
+  const dashOff = 120 - 120*pct;
+
+  /* attach stream to video element */
+  const attachStream = (el, stream) => {
+    if(!el || !stream) return;
+    el.srcObject = stream;
+    el.muted = true;
+    el.play().catch(()=>{});
+  };
+
+  /* attach blob to video element */
+  const attachBlob = (el, url) => {
+    if(!el || !url) return;
+    el.srcObject = null;
+    el.src = url;
+    el.muted = false;
+    el.loop = true;
+    el.play().catch(()=>{});
+  };
+
+  /* ── open camera ── */
+  const openCamera = async () => {
+    setCamErr('');
+    try {
+      if(streamRef.current) streamRef.current.getTracks().forEach(t=>t.stop());
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:facing, width:{ideal:1280}, height:{ideal:720}},
+        audio:true
+      });
+      streamRef.current = stream;
+      setPhase('camera');
+      // attach after state update via ref callback
+      setTimeout(()=>{ if(videoRef.current) attachStream(videoRef.current, stream); }, 50);
+    } catch(e){
+      setCamErr(
+        e.name==='NotAllowedError' ? 'Permite el acceso a la cámara en tu navegador' :
+        e.name==='NotFoundError'   ? 'No se encontró cámara en este dispositivo' :
+        e.name==='NotReadableError'? 'La cámara la usa otra aplicación' :
+        `Error: ${e.message}`
+      );
+    }
+  };
+
+  /* ── flip camera ── */
+  const flip = async () => {
+    const next = facing==='user'?'environment':'user';
+    setFacing(next);
+    if(!streamRef.current) return;
+    streamRef.current.getTracks().forEach(t=>t.stop());
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:next,width:{ideal:1280},height:{ideal:720}},audio:true});
+      streamRef.current = stream;
+      if(videoRef.current) attachStream(videoRef.current, stream);
+    }catch(e){ setCamErr('No se pudo cambiar la cámara'); }
+  };
+
+  /* ── start recording ── */
+  const startRec = () => {
+    if(!streamRef.current) return;
+    chunksRef.current = [];
+    const mime = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4']
+                   .find(t=>MediaRecorder.isTypeSupported(t)) || '';
+    const rec = new MediaRecorder(streamRef.current, mime?{mimeType:mime}:{});
+    recRef.current = rec;
+    rec.ondataavailable = e=>{ if(e.data?.size>0) chunksRef.current.push(e.data); };
+    rec.onstop = ()=>{
+      const blob = new Blob(chunksRef.current, {type: mime||'video/webm'});
+      const url  = URL.createObjectURL(blob);
+      setBlobUrl(url);
+      setBlobData(blob);
+      // stop camera tracks
+      streamRef.current?.getTracks().forEach(t=>t.stop());
+      streamRef.current = null;
+      setPhase('preview');
+      // attach blob to video after render
+      setTimeout(()=>{ if(videoRef.current) attachBlob(videoRef.current, url); }, 80);
+    };
+    rec.start(100);
+    setPhase('recording');
+    setElapsed(0);
+    let ms=0;
+    timerRef.current = setInterval(()=>{ ms+=100; setElapsed(ms); if(ms>=MAX) stopRec(); }, 100);
+  };
+
+  /* ── stop recording ── */
+  const stopRec = () => {
+    clearInterval(timerRef.current);
+    if(recRef.current?.state==='recording') recRef.current.stop();
+  };
+
+  /* ── retake ── */
+  const retake = () => {
+    if(videoRef.current){ videoRef.current.pause(); videoRef.current.src=''; videoRef.current.srcObject=null; }
+    if(blobUrl) URL.revokeObjectURL(blobUrl);
+    setBlobUrl(null); setBlobData(null); setElapsed(0); setCaption('');
+    openCamera();
+  };
+
+  /* ── post ── */
+  const post = async () => {
+    if(!blobData){ toast('Graba un video primero',''); return; }
+    setPhase('uploading');
+    try {
+      let videoUrl = 'demo://local';
+      const durMs = Math.max(elapsed, 500);
+
+      if(user?.id && user.id!=='demo'){
+        const ext  = blobData.type.includes('mp4')?'mp4':'webm';
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const {error:upErr} = await sb.storage.from('videos').upload(path, blobData, {contentType:blobData.type});
+        if(!upErr){
+          const {data:{publicUrl}} = sb.storage.from('videos').getPublicUrl(path);
+          videoUrl = publicUrl;
+        }
+        const {data:row, error:dbErr} = await sb.from('stories').insert({
+          user_id:user.id, video_url:videoUrl, duration_ms:durMs,
+          caption:caption||'Mi historia de hoy ✨',
+          emoji:'🎬', category:'general', is_active:true,
+          expires_at:new Date(Date.now()+86400000).toISOString()
+        }).select('*').single();
+        if(dbErr) throw dbErr;
+        addStory({...row, blobUrl, username:(user.username||'TÚ').toUpperCase(), display:user.username||'tú', emoji:'🎬', story_count:1});
+      } else {
+        addStory({id:'l-'+Date.now(), blobUrl, video_url:blobUrl, username:'TÚ', display:'tú', emoji:'🎬',
+          caption:caption||'Mi historia de hoy ✨', duration_ms:durMs,
+          created_at:new Date().toISOString(), view_count:0, story_count:1});
+      }
+      toast('¡Historia publicada! 🔥', 'ok');
+      onBack();
+    } catch(e){
+      toast(e.message||'Error al publicar','');
+      setPhase('preview');
+    }
+  };
+
+  /* cleanup on unmount */
+  useEffect(()=>()=>{
+    clearInterval(timerRef.current);
+    streamRef.current?.getTracks().forEach(t=>t.stop());
+    if(blobUrl) URL.revokeObjectURL(blobUrl);
+  },[]);
+
+  const showVideo = phase==='camera'||phase==='recording'||phase==='preview';
+
+  return (
+    <div className="screen">
+      <div className="topbar">
+        <div className="logo"><span className="logo-vs">VS</span><div className="logo-dot"/><div className="logo-sub"><span>NUEVO</span><span>VIDEO</span></div></div>
+        <div className="icon-btn" style={{borderRadius:8}} onClick={()=>{ streamRef.current?.getTracks().forEach(t=>t.stop()); onBack(); }}>✕</div>
+      </div>
+
+      <div className="create-screen">
+        <div className="cam-stage">
+          {/* SINGLE video element — reused for both live & preview */}
+          {showVideo && (
+            <video
+              ref={videoRef}
+              className={`cam-video ${phase!=='preview'&&facing==='user'?'mirror':''}`}
+              playsInline
+              style={{zIndex:1}}
+            />
+          )}
+
+          {/* IDLE state */}
+          {phase==='idle' && (
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:20,zIndex:2}}>
+              <div className="cam-idle-btn" onClick={openCamera}>
+                <span>📷</span>
+                <p>ABRIR CÁMARA</p>
+              </div>
+              {camErr && <div className="cam-err">{camErr}</div>}
+            </div>
+          )}
+
+          {/* UPLOADING overlay */}
+          {phase==='uploading' && (
+            <div className="upload-overlay">
+              <div className="upload-spinner"/>
+              <p className="upload-lbl">PUBLICANDO...</p>
+            </div>
+          )}
+
+          {/* REC indicator */}
+          {phase==='recording' && (
+            <div className="rec-ind">
+              <div className="rec-dot"/><span className="rec-txt">REC {((MAX-elapsed)/1000).toFixed(1)}S</span>
+            </div>
+          )}
+
+          {/* Timer arc */}
+          {(phase==='camera'||phase==='recording') && (
+            <div className="timer-wrap">
+              <svg viewBox="0 0 44 44">
+                <circle className="timer-bg" cx="22" cy="22" r="19"/>
+                <circle className="timer-arc" cx="22" cy="22" r="19" style={{strokeDashoffset:dashOff}}/>
+              </svg>
+              <div className="timer-lbl">{phase==='recording'?`${((MAX-elapsed)/1000).toFixed(1)}`:7}S</div>
+            </div>
+          )}
+
+          {/* Caption on preview */}
+          {phase==='preview' && (
+            <div className="cap-input-wrap">
+              <input className="cap-input" value={caption} onChange={e=>setCaption(e.target.value)} placeholder="Describe tu historia..."/>
+            </div>
+          )}
+        </div>
+
+        {/* Tools — only when camera/idle */}
+        {(phase==='idle'||phase==='camera') && (
+          <div className="tools-bar">
+            {[['🎵','AUDIO'],['✍️','TEXTO'],['✨','FX'],['🎨','COLOR'],['😎','FILTRO']].map(([ic,tx])=>(
+              <button key={tx} className="tool-btn"><div className="tool-ic">{ic}</div><span className="tool-lbl">{tx}</span></button>
+            ))}
+          </div>
+        )}
+
+        {/* Record row */}
+        <div className="rec-row">
+          {/* Left */}
+          {phase==='preview'
+            ? <div className="rec-side" onClick={retake}>🔄</div>
+            : <div className="rec-side" onClick={()=>{ streamRef.current?.getTracks().forEach(t=>t.stop()); onBack(); }}>✕</div>
+          }
+
+          {/* Center */}
+          {phase==='idle' && <button className="rec-btn" onClick={openCamera}><div className="rec-core"/></button>}
+          {phase==='camera' && <button className="rec-btn" onClick={startRec}><div className="rec-core"/></button>}
+          {phase==='recording' && <button className="rec-btn stop" onClick={stopRec}><div className="rec-core square"/></button>}
+          {phase==='preview' && (
+            <button className="rec-btn post" onClick={post}>
+              <span className="post-lbl">PUBLICAR</span>
+            </button>
+          )}
+          {phase==='uploading' && (
+            <button className="rec-btn" style={{cursor:'not-allowed',borderColor:'#333'}}>
+              <div style={{width:22,height:22,borderRadius:'50%',border:'3px solid rgba(255,255,255,.15)',borderTopColor:'var(--r)',animation:'spin .7s linear infinite'}}/>
+            </button>
+          )}
+
+          {/* Right */}
+          {(phase==='camera'||phase==='recording')
+            ? <div className="rec-side" onClick={flip}>🔄</div>
+            : <div className="rec-side" style={{opacity:.25}}>⬆️</div>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   ACTIVITY
+══════════════════════════════ */
+function ActivityScreen(){
+  const [notifs, setNotifs] = useState(DEMO_NOTIFS);
+  return (
+    <div className="screen">
+      <div className="topbar">
+        <div className="logo"><span className="logo-vs">VS</span><div className="logo-dot"/><div className="logo-sub"><span>ACTIVIDAD</span></div></div>
+      </div>
+      <div className="rule"><div className="rule-bar"/><span className="rule-txt">NUEVAS</span><div className="rule-line"/></div>
+      <div className="notif-scroll">
+        {notifs.filter(n=>n.isNew).map(n=>(
+          <div key={n.id} className="notif-item" onClick={()=>setNotifs(ns=>ns.map(x=>x.id===n.id?{...x,isNew:false}:x))}>
+            <div className="notif-bar new"/><div className="notif-ring fr"><div className="notif-face">{n.emoji}</div></div>
+            <p className="notif-txt">{n.actor&&<strong>{n.actor} </strong>}{n.text}</p>
+            <span className="notif-time">{n.time}</span>
+          </div>
+        ))}
+        <div className="rule" style={{paddingTop:16}}><div className="rule-bar"/><span className="rule-txt">ANTES</span><div className="rule-line"/></div>
+        {notifs.filter(n=>!n.isNew).map(n=>(
+          <div key={n.id} className="notif-item">
+            <div className="notif-bar old"/><div className="notif-ring se"><div className="notif-face">{n.emoji}</div></div>
+            <p className="notif-txt">{n.actor&&<strong>{n.actor} </strong>}{n.text}</p>
+            <span className="notif-time">{n.time}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   CHAT MODAL
+══════════════════════════════ */
+function ChatModal({user:chatUser, onClose}){
+  const [msgs, setMsgs] = useState([
+    {id:1,me:false,text:'Bro tu historia estuvo 🔥'},
+    {id:2,me:true,text:'¡Gracias! La grabé en 7 segundos 😅'},
+  ]);
+  const [inp,setInp]=useState('');
+  const bottomRef=useRef(null);
+  useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:'smooth'}); },[msgs]);
+  const send=()=>{ const t=inp.trim(); if(!t)return; setMsgs(m=>[...m,{id:Date.now(),me:true,text:t}]); setInp(''); };
+  return (
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal-sheet" style={{maxHeight:'60%'}}>
+        <div className="modal-handle"/>
+        <div className="modal-close-x" onClick={onClose}>✕</div>
+        <div style={{padding:'14px 16px 6px',display:'flex',alignItems:'center',gap:12,flexShrink:0}}>
+          <div className="user-orb fr" style={{width:40,height:40}}><div className="user-face" style={{fontSize:18}}>{chatUser.emoji}</div></div>
+          <div>
+            <p style={{fontFamily:'Oswald',fontSize:15,letterSpacing:2,color:'#fff'}}>{chatUser.name}</p>
+            <p style={{fontSize:11,fontWeight:300,color:'rgba(255,255,255,.3)'}}>mensaje directo</p>
+          </div>
+        </div>
+        <div className="chat-body">
+          {msgs.map(m=><div key={m.id} className={`bubble ${m.me?'me':'them'}`}>{m.text}</div>)}
+          <div ref={bottomRef}/>
+        </div>
+        <div className="chat-input-row">
+          <input className="chat-inp" value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Escribe un mensaje..."/>
+          <button className="chat-send" onClick={send}>▶</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   FOLLOWERS MODAL
+══════════════════════════════ */
+function FollowersModal({open, onClose}){
+  const [tab,setTab]=useState('seg');
+  const [followers,setFollowers]=useState(DEMO_FOLLOWERS);
+  const [chatUser,setChatUser]=useState(null);
+  const toggle=id=>setFollowers(f=>f.map(u=>u.id===id?{...u,following:!u.following}:u));
+  if(!open) return null;
+  if(chatUser) return <ChatModal user={chatUser} onClose={()=>setChatUser(null)}/>;
+  return (
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal-sheet">
+        <div className="modal-handle"/>
+        <div className="modal-close-x" onClick={onClose}>✕</div>
+        <div className="modal-tabs">
+          <button className={`modal-tab ${tab==='seg'?'on':''}`} onClick={()=>setTab('seg')}>SEGUIDORES</button>
+          <button className={`modal-tab ${tab==='sgt'?'on':''}`} onClick={()=>setTab('sgt')}>SIGUIENDO</button>
+        </div>
+        <div className="modal-list">
+          {followers.filter(u=>tab==='sgt'?u.following:true).map(u=>(
+            <div key={u.id} className="user-row">
+              {u.hasStory&&<div className="story-live-dot"/>}
+              <div className={`user-orb ${u.hasStory?'fr':'se'}`}><div className="user-face">{u.emoji}</div></div>
+              <div className="user-info">
+                <p className="user-name-t">{u.name}</p>
+                <p className="user-sub">{u.sub}</p>
+              </div>
+              <div className="user-actions">
+                <button className={`follow-btn ${u.following?'following':'follow'}`} onClick={()=>toggle(u.id)}>
+                  {u.following?'✓ SIGUES':'+ SEGUIR'}
+                </button>
+                <div className="msg-btn" onClick={()=>setChatUser(u)}>💬</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   PROFILE
+══════════════════════════════ */
+function ProfileScreen(){
+  const {user, myStories, openStory} = useApp();
+  const [showFollowers, setShowFollowers] = useState(false);
+  return (
+    <div className="screen">
+      <div className="topbar">
+        <div className="logo"><span className="logo-vs">VS</span><div className="logo-dot"/><div className="logo-sub"><span>PERFIL</span></div></div>
+        <div className="icon-btn" style={{borderRadius:8}}>⚙️</div>
+      </div>
+      <div className="profile-scroll">
+        <div className="profile-hero">
+          <div className="prof-orb">
+            <div className="prof-face">{user?.emoji||'🧑‍💻'}</div>
+            <div className="prof-edit">✏️</div>
+          </div>
+          <p className="prof-name">{(user?.display_name||user?.username||'TU NOMBRE').toUpperCase()}</p>
+          <p className="prof-handle">@{user?.username||'usuario'}</p>
+          <p className="prof-bio">{user?.bio||'Dev & creador. Comparto mi día en pocos segundos.'}</p>
+          <div className="prof-stats">
+            <div className="pstat"><span className="pstat-n">{myStories.length||0}</span><span className="pstat-l">VIDEOS</span></div>
+            <div className="pstat" onClick={()=>setShowFollowers(true)}><span className="pstat-n">2.4K</span><span className="pstat-l">SEGUIDORES</span></div>
+            <div className="pstat" onClick={()=>setShowFollowers(true)}><span className="pstat-n">381</span><span className="pstat-l">SIGUIENDO</span></div>
+          </div>
+        </div>
+        <div className="rule"><div className="rule-bar"/><span className="rule-txt">MIS HISTORIAS</span><div className="rule-line"/></div>
+        <div className="my-stories-grid">
+          {myStories.map(s=>(
+            <div key={s.id} className="my-story" onClick={()=>openStory(s)}>
+              <div className={`ms-ring ${s.fresh?'fr':'se'}`}>
+                <div className="ms-face">{s.emoji}<span className="ms-dur">{((s.duration_ms||5000)/1000).toFixed(1)}S</span></div>
+              </div>
+              <span className="ms-views">👁 {s.view_count||0}</span>
+            </div>
+          ))}
+          {myStories.length===0 && (
+            <div className="empty-state" style={{width:'100%'}}>
+              <p>AÚN NO TIENES HISTORIAS</p>
+            </div>
+          )}
+        </div>
+      </div>
+      <FollowersModal open={showFollowers} onClose={()=>setShowFollowers(false)}/>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   AUTH
+══════════════════════════════ */
+function AuthScreen({onAuth}){
+  const [mode,setMode]=useState('login');
+  const [email,setEmail]=useState('');
+  const [pw,setPw]=useState('');
+  const [uname,setUname]=useState('');
+  const [loading,setLoading]=useState(false);
+  const [err,setErr]=useState('');
+
+  const submit = async () => {
+    setErr(''); setLoading(true);
+    try {
+      if(mode==='login'){
+        const {data,error:e} = await sb.auth.signInWithPassword({email,password:pw});
+        if(e) throw e;
+        const {data:p} = await sb.from('profiles').select('*').eq('id',data.user.id).single();
+        onAuth({...data.user,...(p||{}), emoji:p?.avatar_emoji||'🧑‍💻'});
+      } else {
+        if(uname.length<3) throw new Error('Usuario mínimo 3 caracteres');
+        if(pw.length<6) throw new Error('Contraseña mínimo 6 caracteres');
+        const clean = uname.toLowerCase().replace(/[^a-z0-9_.]/g,'');
+        const {data,error:e} = await sb.auth.signUp({email,password:pw,options:{data:{username:clean,display_name:clean}}});
+        if(e) throw e;
+        if(!data.user) { setErr('Confirma tu email antes de entrar'); setLoading(false); return; }
+        await new Promise(r=>setTimeout(r,600));
+        const {data:p} = await sb.from('profiles').select('*').eq('id',data.user.id).single();
+        onAuth({...data.user,...(p||{}), username:clean, display_name:clean, emoji:'🧑‍💻'});
+      }
+    } catch(e){ setErr(e.message||'Error'); }
+    setLoading(false);
+  };
+
+  const demoLogin = () => onAuth({id:'demo',username:'demo_user',display_name:'Demo User',emoji:'🧑‍💻',bio:'Modo demo'});
+
+  return (
+    <div className="screen active">
+      <div className="auth-wrap">
+        <div className="auth-logo-big">VS<div className="auth-logo-dot"/></div>
+        <p className="auth-tagline">tu día en 7 segundos</p>
+        {err && <div className="auth-err" style={{marginBottom:12,width:'100%'}}>{err}</div>}
+        <div className="auth-form">
+          <input className="auth-inp" type="email" placeholder="correo@email.com" value={email} onChange={e=>setEmail(e.target.value)}/>
+          {mode==='register' && <input className="auth-inp" placeholder="@usuario" value={uname} onChange={e=>setUname(e.target.value.replace('@',''))}/>}
+          <input className="auth-inp" type="password" placeholder="contraseña" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/>
+          <button className="auth-submit" onClick={submit} disabled={loading}>{loading?'...':mode==='login'?'ENTRAR':'CREAR CUENTA'}</button>
+          <div className="auth-div"><div className="auth-div-line"/><span className="auth-div-txt">O</span><div className="auth-div-line"/></div>
+          <button className="auth-ghost" onClick={demoLogin}>MODO DEMO</button>
+        </div>
+        <p className="auth-switch" onClick={()=>setMode(m=>m==='login'?'register':'login')}>
+          {mode==='login'?<>¿Sin cuenta? <em>Regístrate</em></>:<>¿Ya tienes cuenta? <em>Entra</em></>}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   TAB BAR
+══════════════════════════════ */
+function TabBar({tab, setTab}){
+  const TABS = [{id:'feed',icon:'🏠',lbl:'INICIO'},{id:'explore',icon:'🔍',lbl:'EXPLORAR'},{id:'activity',icon:'🔔',lbl:'ACTIVIDAD'},{id:'profile',icon:'👤',lbl:'PERFIL'}];
+  return (
+    <div className="tabbar">
+      {TABS.slice(0,2).map(t=>(
+        <button key={t.id} className={`tab-btn ${tab===t.id?'on':''}`} onClick={()=>setTab(t.id)}>
+          <div className="tab-mark"/>
+          <div className="tab-icon">{t.icon}</div>
+          <div className="tab-lbl">{t.lbl}</div>
+        </button>
+      ))}
+      <button className="tab-diamond" onClick={()=>setTab('create')}>
+        <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+      </button>
+      {TABS.slice(2).map(t=>(
+        <button key={t.id} className={`tab-btn ${tab===t.id?'on':''}`} onClick={()=>setTab(t.id)}>
+          <div className="tab-mark"/>
+          <div className="tab-icon">{t.icon}</div>
+          <div className="tab-lbl">{t.lbl}</div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   ROOT APP
+══════════════════════════════ */
+function App(){
+  const [user, setUser]         = useState(null);
+  const [appReady, setAppReady] = useState(false);
+  const [tab, setTab]           = useState('feed');
+  const [prevTab, setPrevTab]   = useState(null);
+  const [stories, setStories]   = useState(DEMO);
+  const [myStories, setMyStories] = useState([]);
+  const [activeStory, setActiveStory] = useState(null);
+  const [viewed, setViewed]     = useState(new Set());
+  const [toasts, setToasts]     = useState([]);
+  const [sbReact, setSbReact]   = useState(false);
+
+  /* init: check session */
+  useEffect(()=>{
+    sb.auth.getSession().then(async ({data:{session}})=>{
+      if(session?.user){
+        const {data:p} = await sb.from('profiles').select('*').eq('id',session.user.id).single();
+        setUser({...session.user,...(p||{}), emoji:p?.avatar_emoji||'🧑‍💻'});
+        loadStories();
+      }
+      setAppReady(true);
+    });
+  },[]);
+
+  const loadStories = async () => {
+    try {
+      const {data,error} = await sb.from('stories')
+        .select('*, profiles:user_id(username,display_name,avatar_emoji)')
+        .eq('is_active',true)
+        .gte('created_at',new Date(Date.now()-86400000).toISOString())
+        .order('created_at',{ascending:false}).limit(30);
+      if(!error && data?.length>0){
+        setStories(data.map(s=>({
+          ...s, emoji:s.emoji||s.profiles?.avatar_emoji||'🎬',
+          username:(s.profiles?.username||'user').toUpperCase(),
+          display:s.profiles?.username||'user', story_count:1
+        })));
+        setSbReact(true);
+      }
+    } catch(e){ console.log('usando demo data'); }
+  };
+
+  const toast = useCallback((msg, type='') => {
+    const id = Date.now();
+    setToasts(t=>[...t,{id,msg,ok:type==='ok'}]);
+    setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)), 3200);
+  },[]);
+
+  const openStory = useCallback((story)=>{
+    setActiveStory(story);
+    setViewed(v=>new Set([...v, story.id]));
+    if(sbReact && user && user.id!=='demo'){
+      sb.from('story_views').upsert({story_id:story.id, viewer_id:user.id, watch_pct:0}).catch(()=>{});
+    }
+  },[sbReact, user]);
+
+  const addStory = useCallback((s)=>{
+    setStories(prev=>[s,...prev]);
+    setMyStories(prev=>[{...s,fresh:true},...prev]);
+  },[]);
+
+  const changeTab = (t) => {
+    setPrevTab(tab);
+    setTab(t);
+  };
+
+  if(!appReady) return (
+    <div className="vs-loader">
+      <div className="vs-diamond"/>
+      <p className="vs-loader-txt">CARGANDO</p>
+    </div>
+  );
+
+  if(!user) return <AuthScreen onAuth={u=>{ setUser(u); if(u.id!=='demo') loadStories(); }}/>;
+
+  const ctx = {user, stories, myStories, openStory, addStory, viewed, sbReact, toast};
+
+  return (
+    <Ctx.Provider value={ctx}>
+      <Toasts list={toasts}/>
+      <StoryViewer story={activeStory} onClose={()=>setActiveStory(null)}/>
+
+      {tab==='feed'     && <FeedScreen    onRecord={()=>changeTab('create')}/>}
+      {tab==='explore'  && <ExploreScreen/>}
+      {tab==='create'   && <CreateScreen  onBack={()=>setTab(prevTab||'feed')}/>}
+      {tab==='activity' && <ActivityScreen/>}
+      {tab==='profile'  && <ProfileScreen/>}
+
+      {tab!=='create' && <TabBar tab={tab} setTab={changeTab}/>}
+    </Ctx.Provider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
